@@ -8,7 +8,7 @@ public final class Operation {
 
 	public static Complex performExponentiation(Complex in) {
 		double modulus = Math.exp(in.real());
-		return new Complex(modulus * Math.cos(in.imag()), modulus * Math.sin(in.imag());
+		return new Complex(modulus * Math.cos(in.imag()), modulus * Math.sin(in.imag()));
 	}
 
 	// Whichever one is named perform is the one
@@ -16,6 +16,6 @@ public final class Operation {
 	// be renamed in case that is desired
 	public static Complex perform(Complex in) {
 		//Take 1/z
-		return new Complex(in.real()/(in.real()*in.real() + in.imag()*in.imag()));
+		return new Complex(in.real()/(in.real()*in.real() + in.imag()*in.imag()), -in.imag()/(in.real()*in.real() + in.imag()*in.imag()));
 	}
 }
