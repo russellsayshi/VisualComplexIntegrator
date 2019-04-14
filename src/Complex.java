@@ -28,4 +28,9 @@ public class Complex {
 			return Math.atan(im/re);
 		}
 	}
+
+	@Override
+	public String toString() {
+		return Double.toString(re) + " + " + Double.toString(im) + "i";
+	}
 }

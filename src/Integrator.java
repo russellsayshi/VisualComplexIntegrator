@@ -5,5 +5,7 @@ import java.util.ArrayList;
 public final class Integrator {
 	private Integrator() {} // no instantiation
 
-	public static Complex integrate(ArrayList<Complex> 
+	public static Complex integrate(ArrayList<Complex> c) {
+		return new Complex(0, 0);
+	}
 }

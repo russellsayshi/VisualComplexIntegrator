@@ -19,15 +19,23 @@ public class Canvas extends JPanel {
 					// Left click, add a point to the path
 					int x = me.getX();
 					int y = me.getY();
-					mousePoints.add(new Complex(x, y));
+					synchronized(mousePointsSynchronizer) {
+						mousePoints.add(new Complex(screenToMathX(x), screenToMathY(y)));
+					}
+					updateIntegral();
 				} else {
 					// Right click, close path, take integral, and clear
-					if(mousePoints.size() > 0) {
-						// Create closed path
-						mousePoints.add(mousePoints.get(mousePoints.size()-1));
+					synchronized(mousePointsSynchronizer) {
+						if(mousePoints.size() > 0) {
+							// Create closed path
+							mousePoints.add(mousePoints.get(mousePoints.size()-1));
+						}
+					}
+					updateIntegral();
+					synchronized(mousePointsSynchronizer) {
+						mousePoints.clear();
 					}
 				}
-				updateIntegral();
 				SwingUtilities.invokeLater(() -> repaint());
 			}
 		});
@@ -35,9 +43,12 @@ public class Canvas extends JPanel {
 
 	private Complex integralValue = new Complex(0, 0);
 	private ArrayList<Complex> mousePoints = new ArrayList<>();
+	private Object mousePointsSynchronizer = new Object();
 
 	private void updateIntegral() {
-		integralValue = Integrator.integrate(mousePoints);
+		synchronized(mousePointsSynchronizer) {
+			integralValue = Integrator.integrate(mousePoints);
+		}
 	}
 
 	private double mathToScreenX(double x) {
@@ -94,5 +105,15 @@ public class Canvas extends JPanel {
 		// Give integral value
 		g.setColor(Color.RED);
 		g.drawString("Integral value: " + integralValue, 30, 30);
+
+		// Draw integration path
+		g.setColor(Color.BLUE);
+		synchronized(mousePointsSynchronizer) {
+			for(int i = 0; i < mousePoints.size()-1; i++) {
+				Complex current = mousePoints.get(i);
+				Complex next = mousePoints.get(i+1);
+				g.drawLine((int)mathToScreenX(current.real()), (int)mathToScreenY(current.imag()), (int)mathToScreenX(next.real()), (int)mathToScreenY(next.imag()));
+			}
+		}
 	}
 }
