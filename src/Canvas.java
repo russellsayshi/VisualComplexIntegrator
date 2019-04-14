@@ -28,7 +28,7 @@ public class Canvas extends JPanel {
 					synchronized(mousePointsSynchronizer) {
 						if(mousePoints.size() > 0) {
 							// Create closed path
-							mousePoints.add(mousePoints.get(mousePoints.size()-1));
+							mousePoints.add(mousePoints.get(0));
 						}
 					}
 					updateIntegral();

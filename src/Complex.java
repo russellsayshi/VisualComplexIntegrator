@@ -1,6 +1,8 @@
 /* Represents an immutable complex number */
 
 public class Complex {
+	public static final Complex ZERO = new Complex(0, 0);
+
 	protected final double re, im;
 	public Complex(double real, double imag) {
 		this.re = real;
@@ -29,8 +31,36 @@ public class Complex {
 		}
 	}
 
+	public Complex negative() {
+		return new Complex(-re, -im);
+	}
+
+	public Complex add(Complex other) {
+		return new Complex(re + other.re, im + other.im);
+	}
+
+	public Complex add(double other) {
+		return new Complex(re + other, im);
+	}
+
+	public Complex minus(Complex other) {
+		return add(other.negative());
+	}
+
+	public Complex minus(double other) {
+		return new Complex(re - other, im);
+	}
+
+	public Complex multiply(Complex other) {
+		return new Complex(re * other.re - im * other.im, re * other.im + other.re * im);
+	}
+
+	public Complex multiply(double other) {
+		return new Complex(re * other, im * other);
+	}
+
 	@Override
 	public String toString() {
-		return Double.toString(re) + " + " + Double.toString(im) + "i";
+		return String.format("%f + %fi", re, im);
 	}
 }
