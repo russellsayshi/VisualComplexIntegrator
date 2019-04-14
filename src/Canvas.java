@@ -10,6 +10,24 @@ public class Canvas extends JPanel {
 	public static final double maxY = 5;
 	public static final double minX = -5;
 	public static final double minY = -5;
+	public static final int EVAL_GRID_X = 400;
+	public static final int EVAL_GRID_Y = 400;
+	public static final Color[][] color_grid = new Color[EVAL_GRID_Y][EVAL_GRID_X];
+
+	static {
+		// Initialize color grid
+		for(int y = 0; y < EVAL_GRID_Y; y++) {
+			for(int x = 0; x < EVAL_GRID_X; x++) {
+				Complex point = new Complex(((double)x)/EVAL_GRID_X*(maxX-minX)+minX, ((double)y+1)/EVAL_GRID_Y*(maxY-minY)+minY);
+				Complex value = Operation.perform(point);
+				double arg = point.arg() / Math.PI;
+				if(arg < 0) arg += 2;
+				double mod = Math.atan(point.modulus()) * 2 / Math.PI;
+				Color c = Color.getHSBColor((float)arg, 0.5f, 1-(float)mod);
+				color_grid[y][x] = c;
+			}
+		}
+	}
 
 	public Canvas() {
 		addMouseListener(new MouseAdapter() {
@@ -80,15 +98,29 @@ public class Canvas extends JPanel {
 		Graphics2D g = (Graphics2D) gOld;
 
 		// Clear screen
-		g.setColor(Color.WHITE);
-		g.fillRect(0, 0, getWidth(), getHeight());
-
-		// Draw grid lines
-		g.setColor(Color.BLACK);
+		//g.setColor(Color.WHITE);
+		//g.fillRect(0, 0, getWidth(), getHeight());
 
 		// Find coordinates of origin
 		double zeroX = mathToScreenX(0);
 		double zeroY = mathToScreenY(0);
+
+		// Initial calculations
+		int rectWidth = (int)Math.ceil(getWidth()/EVAL_GRID_X+1);
+		int rectHeight = (int)Math.ceil(getHeight()/EVAL_GRID_Y+1);
+
+		// Fill in squares 
+		for(int y = 0; y < EVAL_GRID_Y; y++) {
+			for(int x = 0; x < EVAL_GRID_X; x++) {
+				Complex startPoint = new Complex(((double)x)/EVAL_GRID_X*(maxX-minX)+minX, ((double)y)/EVAL_GRID_Y*(maxY-minY)+minY);
+				Complex screenStartPoint = mathToScreen(startPoint);
+				g.setColor(color_grid[y][x]);
+				g.fillRect((int)screenStartPoint.real(), (int)(screenStartPoint.imag()-rectHeight), (int)(rectWidth), (int)(rectHeight));
+			}
+		}
+
+		// Draw grid lines
+		g.setColor(Color.BLACK);
 
 		// Fill in lines
 		for(int x = (int)Math.ceil(minX); x < (int)Math.floor(maxX); x++) {
@@ -103,8 +135,8 @@ public class Canvas extends JPanel {
 		}
 
 		// Give integral value
-		g.setColor(Color.RED);
-		g.drawString("Integral value: " + integralValue, 30, 30);
+		g.setColor(Color.WHITE);
+		g.drawString("Integral value: " + integralValue, 5, 15);
 
 		// Draw integration path
 		g.setColor(Color.BLUE);

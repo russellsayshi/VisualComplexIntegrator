@@ -61,6 +61,6 @@ public class Complex {
 
 	@Override
 	public String toString() {
-		return String.format("%f + %fi", re, im);
+		return String.format("%.5f + %.5fi", re, im);
 	}
 }
