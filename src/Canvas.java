@@ -56,7 +56,7 @@ public class Canvas extends JPanel {
 	}
 
 	private double mathToScreenY(double y) {
-		return (y-minY)/(maxY-minY)*getHeight();
+		return getHeight()-(y-minY)/(maxY-minY)*getHeight();
 	}
 
 	private double screenToMathX(double x) {
@@ -64,7 +64,7 @@ public class Canvas extends JPanel {
 	}
 
 	private double screenToMathY(double y) {
-		return y/getHeight()*(maxY-minY)+minY;
+		return (getHeight()-y)/getHeight()*(maxY-minY)+minY;
 	}
 
 	private Complex mathToScreen(Complex z) {
