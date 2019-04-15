@@ -1,7 +1,7 @@
 # VisualComplexIntegrator
 Quick project for my theory of complex functions class to help illustrate Cauchy integral formula
 
-Here is an image of it in action, graphing the function `1/(sin(z)*(1+z^2))`:
+Here is an image of it in action, graphing the function `1/(sin(z)*(1+z^2))` with a path drawn around one of the poles at the bottom:
 
 ![in action](https://i.imgur.com/QWkopzz.png)
 
