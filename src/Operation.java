@@ -16,7 +16,6 @@ public final class Operation {
 	// be renamed in case that is desired
 	public static Complex perform(Complex in) {
 		//Take 1/z
-		//return in;
-		return new Complex(in.real()/(in.real()*in.real() + in.imag()*in.imag()), -in.imag()/(in.real()*in.real() + in.imag()*in.imag()));
+		return new Complex(1, 0).divide(in);
 	}
 }

@@ -20,10 +20,10 @@ public class Canvas extends JPanel {
 			for(int x = 0; x < EVAL_GRID_X; x++) {
 				Complex point = new Complex(((double)x)/EVAL_GRID_X*(maxX-minX)+minX, ((double)y+1)/EVAL_GRID_Y*(maxY-minY)+minY);
 				Complex value = Operation.perform(point);
-				double arg = point.arg() / Math.PI;
-				if(arg < 0) arg += 2;
-				double mod = Math.atan(point.modulus()) * 2 / Math.PI;
-				Color c = Color.getHSBColor((float)arg, 0.5f, 1-(float)mod);
+				double arg = value.arg()/(2*Math.PI)+0.5;
+				if(arg < 0 || arg > 1) System.out.println(arg);
+				double mod = Math.atan(value.modulus()) * 2 / Math.PI;
+				Color c = Color.getHSBColor((float)arg, 0.5f, (float)mod);
 				color_grid[y][x] = c;
 			}
 		}

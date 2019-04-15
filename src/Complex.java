@@ -27,7 +27,15 @@ public class Complex {
 			if(im > 0) return Math.PI/2;
 			else return -Math.PI/2;
 		} else {
-			return Math.atan(im/re);
+			if(re > 0) {
+				return Math.atan(im/re);
+			} else {
+				if(im > 0) {
+					return Math.PI+Math.atan(im/re);
+				} else {
+					return -Math.PI+Math.atan(im/re);
+				}
+			}
 		}
 	}
 
@@ -57,6 +65,31 @@ public class Complex {
 
 	public Complex multiply(double other) {
 		return new Complex(re * other, im * other);
+	}
+
+	public Complex conj() {
+		return new Complex(re, -im);
+	}
+
+	public Complex divide(Complex other) {
+		double denominator = other.im*other.im + other.re*other.re;
+		return new Complex((re*other.re + im*other.im)/denominator, (im*other.re - re*other.im)/denominator);
+	}
+
+	public Complex divide(double other) {
+		return multiply(1/other);
+	}
+
+	public boolean equals(Complex other) {
+		return (re == other.re) && (im == other.im);
+	}
+
+	public boolean equals(double other) {
+		return (im == 0) && (re == other);
+	}
+
+	public int hashCode() {
+		return Double.hashCode(im) * Double.hashCode(re);
 	}
 
 	@Override
