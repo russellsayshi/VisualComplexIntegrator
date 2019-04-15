@@ -2,6 +2,8 @@
 
 public class Complex {
 	public static final Complex ZERO = new Complex(0, 0);
+	public static final Complex IMAGINARY = new Complex(0, 1);
+	public static final Complex ONE = new Complex(1, 0);
 	public static final Complex INFINITY = new Complex(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
 
 	protected final double re, im;
@@ -86,6 +88,22 @@ public class Complex {
 	public Complex divide(double other) {
 		if(other == 0) return INFINITY;
 		return multiply(1/other);
+	}
+
+	public Complex exp() {
+		double modulus = Math.exp(re);
+		return new Complex(modulus * Math.cos(im), modulus * Math.sin(im));
+	}
+
+	public Complex sin() {
+		Complex denominator = new Complex(0, 2);
+		Complex iz = multiply(IMAGINARY);
+		return iz.exp().minus(iz.negative().exp()).divide(denominator);
+	}
+
+	public Complex cos() {
+		Complex iz = multiply(IMAGINARY);
+		return iz.exp().add(iz.negative().exp()).divide(2);
 	}
 
 	public boolean equals(Complex other) {

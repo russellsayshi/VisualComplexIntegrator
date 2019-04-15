@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.util.*;
 
 /* This is what is drawn on in the JFrame */
@@ -13,6 +14,11 @@ public class Canvas extends JPanel {
 	public static final int EVAL_GRID_X = 400;
 	public static final int EVAL_GRID_Y = 400;
 	public static final Color[][] color_grid = new Color[EVAL_GRID_Y][EVAL_GRID_X];
+	public static final int DESIRED_FPS = 60;
+	public static final int SLEEP_TIME_MS = 1000/DESIRED_FPS;
+	public static final Font font = new Font("Courier", Font.PLAIN, 15);
+	public static final int CHECKBOX_SIZE = 10;
+	public static final int CHECKBOX_PADDING = 10;
 
 	static {
 		// Initialize color grid
@@ -35,12 +41,19 @@ public class Canvas extends JPanel {
 			public void mouseClicked(MouseEvent me) {
 				if(me.getButton() == MouseEvent.BUTTON1) {
 					// Left click, add a point to the path
+					// or check the checkbox
 					int x = me.getX();
 					int y = me.getY();
-					synchronized(mousePointsSynchronizer) {
-						mousePoints.add(new Complex(screenToMathX(x), screenToMathY(y)));
+					if(x >= CHECKBOX_PADDING && x <= CHECKBOX_PADDING + CHECKBOX_SIZE
+							&& y >= getHeight()-CHECKBOX_PADDING-CHECKBOX_SIZE && y <= getHeight()-CHECKBOX_PADDING) {
+						// Change value of checkbox
+						showExtraInfo = !showExtraInfo;
+					} else {
+						// Add mouse point
+						synchronized(mousePointsSynchronizer) {
+							mousePoints.add(new Complex(screenToMathX(x, getWidth()), screenToMathY(y, getHeight())));
+						}
 					}
-					updateIntegral();
 				} else {
 					// Right click, close path, take integral, and clear
 					synchronized(mousePointsSynchronizer) {
@@ -49,73 +62,149 @@ public class Canvas extends JPanel {
 							mousePoints.add(mousePoints.get(0));
 						}
 					}
-					updateIntegral();
 					synchronized(mousePointsSynchronizer) {
 						mousePoints.clear();
 					}
 				}
-				SwingUtilities.invokeLater(() -> repaint());
+				requestRepaint();
+			}
+			@Override
+			public void mouseExited(MouseEvent me) {
+				mouseInFrame = false;
+				synchronized(mousePointsSynchronizer) {
+					mousePoint = null;
+				}
+				synchronized(mouseNotifier) {
+					mouseNotifier.notifyAll();
+				}
+			}
+			@Override
+			public void mouseEntered(MouseEvent me) {
+				mouseInFrame = true;
+				synchronized(mouseNotifier) {
+					mouseNotifier.notifyAll();
+				}
 			}
 		});
+		addMouseMotionListener(new MouseMotionAdapter() {
+			@Override
+			public void mouseMoved(MouseEvent me) {
+				synchronized(mousePointsSynchronizer) {
+					mousePoint = new Complex(screenToMathX(me.getX(), getWidth()), screenToMathY(me.getY(), getHeight()));
+				}
+				valueAtMouse = Operation.perform(mousePoint);
+				if(showExtraInfo) {
+					mousePoints.setVolatileEndpoint(mousePoint);
+				}
+				requestRepaint();
+			}
+		});
+		addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent ce) {
+				background = null;
+			}
+		});
+		new Thread(() -> {
+			try {
+				repaintThread();
+			} catch(InterruptedException ie) {
+				ie.printStackTrace();
+			}
+		}).start();
 	}
-
-	private Complex integralValue = new Complex(0, 0);
-	private ArrayList<Complex> mousePoints = new ArrayList<>();
-	private Object mousePointsSynchronizer = new Object();
-
-	private void updateIntegral() {
-		synchronized(mousePointsSynchronizer) {
-			integralValue = Integrator.integrate(mousePoints);
+	
+	private void repaintThread() throws InterruptedException {
+		long lastFrameRequestedAt = 0;
+		while(true) {
+			while(requestRepaintFlag || 1 == 1) {
+				if(showExtraInfo) {
+					approximateIntegral = mousePoints.getVolatileIntegral();
+					approximateClosedIntegral = mousePoints.getVolatileClosedIntegral();
+				}
+				SwingUtilities.invokeLater(() -> repaint());
+				long currentFrameRequestedAt = System.currentTimeMillis();
+				long timeDiff = (currentFrameRequestedAt - lastFrameRequestedAt);
+				long timeToSleep = (timeDiff > SLEEP_TIME_MS ? 0 : SLEEP_TIME_MS - timeDiff);
+				requestRepaintFlag = false;
+				Thread.sleep(timeToSleep);
+				lastFrameRequestedAt = currentFrameRequestedAt;
+			}
+			synchronized(mouseNotifier) {
+				mouseNotifier.wait();
+			}
 		}
 	}
 
-	private double mathToScreenX(double x) {
-		return (x-minX)/(maxX-minX)*getWidth();
+	private transient IntegrationPath mousePoints = new IntegrationPath();
+	private volatile transient Complex mousePoint = null;
+	private transient final Object mousePointsSynchronizer = new Object();
+	private transient final Object mouseNotifier = new Object();
+	private transient BufferedImage background = null;
+	private transient volatile boolean mouseInFrame = false;
+	private transient volatile boolean requestRepaintFlag = false;
+	private transient volatile boolean showExtraInfo = false;
+	private transient volatile Complex valueAtMouse = Complex.ZERO;
+	private transient volatile Complex approximateIntegral = Complex.ZERO;
+	private transient volatile Complex approximateClosedIntegral = Complex.ZERO;
+
+	private void requestRepaint() {
+		requestRepaintFlag = true;
+		synchronized(mouseNotifier) {
+			mouseNotifier.notifyAll();
+		}
 	}
 
-	private double mathToScreenY(double y) {
-		return getHeight()-(y-minY)/(maxY-minY)*getHeight();
+	private double mathToScreenX(double x, double width) {
+		return (x-minX)/(maxX-minX)*width;
 	}
 
-	private double screenToMathX(double x) {
-		return x/getWidth()*(maxX-minX)+minX;
+	private double mathToScreenY(double y, double height) {
+		return height-(y-minY)/(maxY-minY)*height;
 	}
 
-	private double screenToMathY(double y) {
-		return (getHeight()-y)/getHeight()*(maxY-minY)+minY;
+	private double screenToMathX(double x, double width) {
+		return x/width*(maxX-minX)+minX;
 	}
 
-	private Complex mathToScreen(Complex z) {
-		return new Complex(mathToScreenX(z.real()), mathToScreenY(z.imag()));
+	private double screenToMathY(double y, double height) {
+		return (height-y)/height*(maxY-minY)+minY;
 	}
 
-	private Complex screenToMath(Complex z) {
-		return new Complex(screenToMathX(z.real()), screenToMathY(z.imag()));
+	private Complex mathToScreen(Complex z, double width, double height) {
+		return new Complex(mathToScreenX(z.real(), width), mathToScreenY(z.imag(), height));
 	}
 
-	@Override
-	public void paintComponent(Graphics gOld) {
-		Graphics2D g = (Graphics2D) gOld;
+	private Complex screenToMath(Complex z, double width, double height) {
+		return new Complex(screenToMathX(z.real(), width), screenToMathY(z.imag(), height));
+	}
 
-		// Clear screen
-		//g.setColor(Color.WHITE);
-		//g.fillRect(0, 0, getWidth(), getHeight());
+	private BufferedImage rebuildBackground() {
+		int width = getWidth();
+		int height = getHeight();
+		BufferedImage bg = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
+		Graphics2D g = bg.createGraphics();
 
 		// Find coordinates of origin
-		double zeroX = mathToScreenX(0);
-		double zeroY = mathToScreenY(0);
+		double zeroX = mathToScreenX(0, width);
+		double zeroY = mathToScreenY(0, height);
 
 		// Initial calculations
-		int rectWidth = (int)Math.ceil(getWidth()/EVAL_GRID_X+1);
-		int rectHeight = (int)Math.ceil(getHeight()/EVAL_GRID_Y+1);
+		int rectWidth = (int)Math.ceil(width/EVAL_GRID_X+1);
+		int rectHeight = (int)Math.ceil(height/EVAL_GRID_Y+1);
 
 		// Fill in squares 
-		for(int y = 0; y < EVAL_GRID_Y; y++) {
-			for(int x = 0; x < EVAL_GRID_X; x++) {
-				Complex startPoint = new Complex(((double)x)/EVAL_GRID_X*(maxX-minX)+minX, ((double)y)/EVAL_GRID_Y*(maxY-minY)+minY);
-				Complex screenStartPoint = mathToScreen(startPoint);
-				g.setColor(color_grid[y][x]);
-				g.fillRect((int)screenStartPoint.real(), (int)(screenStartPoint.imag()-rectHeight), (int)(rectWidth), (int)(rectHeight));
+		for(int y = 0; y < height; y++) {
+			for(int x = 0; x < width; x++) {
+				Complex point = new Complex(((double)x)/width*(maxX-minX)+minX, ((double)y)/height*(maxY-minY)+minY);
+				Complex value = Operation.perform(point);
+				double arg = value.arg()/(2*Math.PI)+0.5;
+				if(arg < 0 || arg > 1) System.out.println(arg);
+				double mod = Math.atan(value.modulus()) * 2 / Math.PI;
+				Color c = Color.getHSBColor((float)arg, 0.5f, (float)mod);
+				Complex screenPoint = mathToScreen(point, width, height);
+				g.setColor(c);
+				g.fillRect(x, y, 1, 1);
 			}
 		}
 
@@ -124,19 +213,49 @@ public class Canvas extends JPanel {
 
 		// Fill in lines
 		for(int x = (int)Math.ceil(minX); x < (int)Math.floor(maxX); x++) {
-			int location = (int)mathToScreenX(x);
-			g.drawLine(location, 0, location, getHeight());
+			int location = (int)mathToScreenX(x, width);
+			g.drawLine(location, 0, location, height);
 			g.drawString(Integer.toString(x), location, (int)zeroY);
 		}
 		for(int y = (int)Math.ceil(minY); y < (int)Math.floor(maxY); y++) {
-			int location = (int)mathToScreenY(y);
-			g.drawLine(0, location, getWidth(), location);
+			int location = (int)mathToScreenY(y, height);
+			g.drawLine(0, location, width, location);
 			g.drawString(Integer.toString(y), (int)zeroX, location);
 		}
 
+		return bg;
+	}
+
+	@Override
+	public void paintComponent(Graphics gOld) {
+		Graphics2D g = (Graphics2D) gOld;
+		int width = getWidth();
+		int height = getHeight();
+
+		BufferedImage bg = background;
+		if(bg == null) {
+			bg = rebuildBackground();
+			background = bg;
+			g.drawImage(bg, 0, 0, null);
+		} else {
+			g.drawImage(bg, 0, 0, null);
+		}
+
+		// Set font
+		g.setFont(font);
+
 		// Give integral value
 		g.setColor(Color.WHITE);
-		g.drawString("Integral value: " + integralValue, 5, 15);
+		g.drawString("Integral value: " + mousePoints.integrate(), 5, 15);
+		if(showExtraInfo) g.drawString("Closed path integral: " + mousePoints.integrateClosed(), 5, 30);
+
+		// Draw checkbox
+		if(!showExtraInfo) {
+			g.drawRect(CHECKBOX_PADDING, height-CHECKBOX_PADDING-CHECKBOX_SIZE, CHECKBOX_SIZE, CHECKBOX_SIZE);
+		} else {
+			g.fillRect(CHECKBOX_PADDING, height-CHECKBOX_PADDING-CHECKBOX_SIZE, CHECKBOX_SIZE, CHECKBOX_SIZE);
+		}
+		g.drawString("Extra?", CHECKBOX_PADDING*2 + CHECKBOX_SIZE, height-10);
 
 		// Draw integration path
 		g.setColor(Color.BLUE);
@@ -144,8 +263,28 @@ public class Canvas extends JPanel {
 			for(int i = 0; i < mousePoints.size()-1; i++) {
 				Complex current = mousePoints.get(i);
 				Complex next = mousePoints.get(i+1);
-				g.drawLine((int)mathToScreenX(current.real()), (int)mathToScreenY(current.imag()), (int)mathToScreenX(next.real()), (int)mathToScreenY(next.imag()));
+				g.drawLine((int)mathToScreenX(current.real(), width),
+						(int)mathToScreenY(current.imag(), height),
+						(int)mathToScreenX(next.real(), width),
+						(int)mathToScreenY(next.imag(), height));
+			}
+			if(mousePoint != null && mousePoints.size() > 0) {
+				Complex current = mousePoints.get(mousePoints.size()-1);
+				g.drawLine((int)mathToScreenX(current.real(), width),
+						(int)mathToScreenY(current.imag(), height),
+						(int)mathToScreenX(mousePoint.real(), width),
+						(int)mathToScreenY(mousePoint.imag(), height));
+				g.setColor(Color.WHITE);
+				if(showExtraInfo) {
+					g.drawString("Function value: " + valueAtMouse, 5, height-60);
+					g.drawString("Approximate closed integral: " + approximateClosedIntegral, 5, height-30);
+					g.drawString("Approximate integral: " + approximateIntegral, 5, height-45);
+				}
+			} else if(showExtraInfo) {
+				g.setColor(Color.WHITE);
+				g.drawString("Function value: " + valueAtMouse, 5, height-30);
 			}
 		}
+
 	}
 }
