@@ -2,11 +2,17 @@
 
 public class Complex {
 	public static final Complex ZERO = new Complex(0, 0);
+	public static final Complex INFINITY = new Complex(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
 
 	protected final double re, im;
 	public Complex(double real, double imag) {
-		this.re = real;
-		this.im = imag;
+		if(real == Double.POSITIVE_INFINITY || imag == Double.POSITIVE_INFINITY) {
+			this.re = Double.POSITIVE_INFINITY;
+			this.im = Double.POSITIVE_INFINITY;
+		} else {
+			this.re = real;
+			this.im = imag;
+		}
 	}
 
 	public double real() {
@@ -73,10 +79,12 @@ public class Complex {
 
 	public Complex divide(Complex other) {
 		double denominator = other.im*other.im + other.re*other.re;
+		if(denominator == 0) return INFINITY;
 		return new Complex((re*other.re + im*other.im)/denominator, (im*other.re - re*other.im)/denominator);
 	}
 
 	public Complex divide(double other) {
+		if(other == 0) return INFINITY;
 		return multiply(1/other);
 	}
 
