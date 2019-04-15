@@ -3,4 +3,4 @@ Quick project for my theory of complex functions class to help illustrate Cauchy
 
 Here is a sample graph of the function `1/z`:
 
-![sample graph](https://i.imgur.com/TjpV4ib.png)
+![sample graph](https://i.imgur.com/L2rcIbg.png)
