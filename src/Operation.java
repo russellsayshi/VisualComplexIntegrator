@@ -15,7 +15,7 @@ public final class Operation {
 	// that is graphed. The above is just to
 	// be renamed in case that is desired
 	public static Complex perform(Complex in) {
-		//Take 1/(z^2+1)
-		return new Complex(1, 0).divide(in.multiply(in).add(1)).divide(in.sin());
+		//Take e^(2/z)
+		return new Complex(2, 0).divide(in).exp();
 	}
 }

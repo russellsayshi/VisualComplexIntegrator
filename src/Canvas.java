@@ -270,6 +270,7 @@ public class Canvas extends JPanel {
 			}
 			if(mousePoint != null && mousePoints.size() > 0) {
 				Complex current = mousePoints.get(mousePoints.size()-1);
+				g.setColor(Color.GREEN);
 				g.drawLine((int)mathToScreenX(current.real(), width),
 						(int)mathToScreenY(current.imag(), height),
 						(int)mathToScreenX(mousePoint.real(), width),
