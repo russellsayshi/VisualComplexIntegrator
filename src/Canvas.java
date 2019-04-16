@@ -11,29 +11,11 @@ public class Canvas extends JPanel {
 	public static final double maxY = 5;
 	public static final double minX = -5;
 	public static final double minY = -5;
-	public static final int EVAL_GRID_X = 400;
-	public static final int EVAL_GRID_Y = 400;
-	public static final Color[][] color_grid = new Color[EVAL_GRID_Y][EVAL_GRID_X];
 	public static final int DESIRED_FPS = 60;
 	public static final int SLEEP_TIME_MS = 1000/DESIRED_FPS;
 	public static final Font font = new Font("Courier", Font.PLAIN, 15);
 	public static final int CHECKBOX_SIZE = 10;
 	public static final int CHECKBOX_PADDING = 10;
-
-	static {
-		// Initialize color grid
-		for(int y = 0; y < EVAL_GRID_Y; y++) {
-			for(int x = 0; x < EVAL_GRID_X; x++) {
-				Complex point = new Complex(((double)x)/EVAL_GRID_X*(maxX-minX)+minX, ((double)y+1)/EVAL_GRID_Y*(maxY-minY)+minY);
-				Complex value = Operation.perform(point);
-				double arg = value.arg()/(2*Math.PI)+0.5;
-				if(arg < 0 || arg > 1) System.out.println(arg);
-				double mod = Math.atan(value.modulus()) * 2 / Math.PI;
-				Color c = Color.getHSBColor((float)arg, 0.5f, (float)mod);
-				color_grid[y][x] = c;
-			}
-		}
-	}
 
 	public Canvas() {
 		addMouseListener(new MouseAdapter() {
@@ -188,10 +170,6 @@ public class Canvas extends JPanel {
 		// Find coordinates of origin
 		double zeroX = mathToScreenX(0, width);
 		double zeroY = mathToScreenY(0, height);
-
-		// Initial calculations
-		int rectWidth = (int)Math.ceil(width/EVAL_GRID_X+1);
-		int rectHeight = (int)Math.ceil(height/EVAL_GRID_Y+1);
 
 		// Fill in squares 
 		for(int y = 0; y < height; y++) {
