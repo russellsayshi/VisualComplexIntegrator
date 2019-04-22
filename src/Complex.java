@@ -101,9 +101,19 @@ public class Complex {
 		return iz.exp().minus(iz.negative().exp()).divide(denominator);
 	}
 
+	public Complex sinh() {
+		Complex denominator = new Complex(0, 2);
+		return exp().minus(negative().exp()).divide(denominator);
+	}
+
 	public Complex cos() {
 		Complex iz = multiply(IMAGINARY);
 		return iz.exp().add(iz.negative().exp()).divide(2);
+	}
+
+	public Complex cosh() {
+		Complex denominator = new Complex(0, 2);
+		return exp().add(negative().exp()).divide(denominator);
 	}
 
 	public boolean equals(Complex other) {

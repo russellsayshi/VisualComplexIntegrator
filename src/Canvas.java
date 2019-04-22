@@ -16,6 +16,8 @@ public class Canvas extends JPanel {
 	public static final Font font = new Font("Courier", Font.PLAIN, 15);
 	public static final int CHECKBOX_SIZE = 10;
 	public static final int CHECKBOX_PADDING = 10;
+	public static final int TEXT_BG_PADDING_X = 2;
+	public static final int TEXT_BG_PADDING_Y = 0;
 
 	public Canvas() {
 		addMouseListener(new MouseAdapter() {
@@ -179,7 +181,7 @@ public class Canvas extends JPanel {
 				double arg = value.arg()/(2*Math.PI)+0.5;
 				if(arg < 0 || arg > 1) System.out.println(arg);
 				double mod = Math.atan(value.modulus()) * 2 / Math.PI;
-				Color c = Color.getHSBColor((float)arg, 0.5f, (float)mod);
+				Color c = Color.getHSBColor((float)arg, 0.6f - (float)(5/(3+Math.exp(-value.modulus()/10))-1.25), (float)mod);
 				Complex screenPoint = mathToScreen(point, width, height);
 				g.setColor(c);
 				g.fillRect(x, y, 1, 1);
@@ -204,6 +206,17 @@ public class Canvas extends JPanel {
 		return bg;
 	}
 
+	private static final Color BACKGROUND_RECT_COLOR = new Color(0, 0, 0, 100);
+	private void drawTextWithBackground(Graphics2D g, FontMetrics fm, String text, int x, int y) {
+		drawTextWithBackground(g, fm, text, x, y, TEXT_BG_PADDING_X, TEXT_BG_PADDING_X, TEXT_BG_PADDING_Y, TEXT_BG_PADDING_Y);
+	}
+	private void drawTextWithBackground(Graphics2D g, FontMetrics fm, String text, int x, int y, int xPaddingLeft, int xPaddingRight, int yPaddingTop, int yPaddingBottom) {
+		g.setColor(BACKGROUND_RECT_COLOR);
+		g.fillRect(x - xPaddingLeft, y - yPaddingTop - fm.getAscent(), fm.stringWidth(text) + xPaddingLeft + xPaddingRight, fm.getHeight() + yPaddingTop + yPaddingBottom);
+		g.setColor(Color.WHITE);
+		g.drawString(text, x, y);
+	}
+
 	@Override
 	public void paintComponent(Graphics gOld) {
 		Graphics2D g = (Graphics2D) gOld;
@@ -221,19 +234,20 @@ public class Canvas extends JPanel {
 
 		// Set font
 		g.setFont(font);
+		FontMetrics fm = g.getFontMetrics();
 
 		// Give integral value
 		g.setColor(Color.WHITE);
-		g.drawString("Integral value: " + mousePoints.integrate(), 5, 15);
-		if(showExtraInfo) g.drawString("Closed path integral: " + mousePoints.integrateClosed(), 5, 30);
+		drawTextWithBackground(g, fm, "Integral value: " + mousePoints.integrate(), 5, 15);
+		if(showExtraInfo) drawTextWithBackground(g, fm, "Closed path integral: " + mousePoints.integrateClosed(), 5, 35);
 
 		// Draw checkbox
+		drawTextWithBackground(g, fm, "Extra?", CHECKBOX_PADDING*2 + CHECKBOX_SIZE, height-10, CHECKBOX_PADDING + CHECKBOX_SIZE*2 - TEXT_BG_PADDING_X, TEXT_BG_PADDING_X, TEXT_BG_PADDING_Y, TEXT_BG_PADDING_Y);
 		if(!showExtraInfo) {
 			g.drawRect(CHECKBOX_PADDING, height-CHECKBOX_PADDING-CHECKBOX_SIZE, CHECKBOX_SIZE, CHECKBOX_SIZE);
 		} else {
 			g.fillRect(CHECKBOX_PADDING, height-CHECKBOX_PADDING-CHECKBOX_SIZE, CHECKBOX_SIZE, CHECKBOX_SIZE);
 		}
-		g.drawString("Extra?", CHECKBOX_PADDING*2 + CHECKBOX_SIZE, height-10);
 
 		// Draw integration path
 		g.setColor(Color.BLUE);
@@ -253,15 +267,13 @@ public class Canvas extends JPanel {
 						(int)mathToScreenY(current.imag(), height),
 						(int)mathToScreenX(mousePoint.real(), width),
 						(int)mathToScreenY(mousePoint.imag(), height));
-				g.setColor(Color.WHITE);
 				if(showExtraInfo) {
-					g.drawString("Function value: " + valueAtMouse, 5, height-60);
-					g.drawString("Approximate closed integral: " + approximateClosedIntegral, 5, height-30);
-					g.drawString("Approximate integral: " + approximateIntegral, 5, height-45);
+					drawTextWithBackground(g, fm, "Function value: " + valueAtMouse, 5, height-70);
+					drawTextWithBackground(g, fm, "Approximate closed integral: " + approximateClosedIntegral, 5, height-30);
+					drawTextWithBackground(g, fm, "Approximate integral: " + approximateIntegral, 5, height-50);
 				}
 			} else if(showExtraInfo) {
-				g.setColor(Color.WHITE);
-				g.drawString("Function value: " + valueAtMouse, 5, height-30);
+				drawTextWithBackground(g, fm, "Function value: " + valueAtMouse, 5, height-30);
 			}
 		}
 
