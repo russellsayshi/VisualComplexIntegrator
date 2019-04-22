@@ -124,6 +124,36 @@ public class Complex {
 		return sinh().divide(cosh());
 	}
 
+	public Complex log() {
+		//returns principal value of logarithm
+		if(Math.abs(re) < 0.000001 && Math.abs(im) < 0.000001) return Complex.INFINITY;
+		return new Complex(Math.log(modulus()), arg());
+	}
+
+	public Complex pow(Complex pow) {
+		//returns power with log taken as principal argument
+		return pow.multiply(log()).exp();
+	}
+
+	public Complex pow(double pow) {
+		return log().multiply(pow).exp();
+	}
+
+	public Complex sqrt() {
+		return pow(0.5);
+	}
+
+	public Complex pow(int pow) {
+		if(pow > 0 && pow < 5) {
+			Complex value = this;
+			for(int i = 0; i < pow-1; i++) {
+				value = value.multiply(value);
+			}
+			return value;
+		}
+		return pow(pow);
+	}
+
 	public boolean equals(Complex other) {
 		return (re == other.re) && (im == other.im);
 	}
