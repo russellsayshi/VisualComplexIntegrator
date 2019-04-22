@@ -121,9 +121,6 @@ public class Complex {
 	}
 
 	public Complex tanh() {
-		for(int i = 0; i < 100; i++) {
-			System.out.println(new Complex(i/100.0, 0).cosh());
-		}
 		return sinh().divide(cosh());
 	}
 
