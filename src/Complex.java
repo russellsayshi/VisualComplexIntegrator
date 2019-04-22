@@ -102,7 +102,7 @@ public class Complex {
 	}
 
 	public Complex sinh() {
-		Complex denominator = new Complex(0, 2);
+		Complex denominator = new Complex(2, 0);
 		return exp().minus(negative().exp()).divide(denominator);
 	}
 
@@ -112,8 +112,19 @@ public class Complex {
 	}
 
 	public Complex cosh() {
-		Complex denominator = new Complex(0, 2);
+		Complex denominator = new Complex(2, 0);
 		return exp().add(negative().exp()).divide(denominator);
+	}
+
+	public Complex tan() {
+		return sin().divide(cos());
+	}
+
+	public Complex tanh() {
+		for(int i = 0; i < 100; i++) {
+			System.out.println(new Complex(i/100.0, 0).cosh());
+		}
+		return sinh().divide(cosh());
 	}
 
 	public boolean equals(Complex other) {
