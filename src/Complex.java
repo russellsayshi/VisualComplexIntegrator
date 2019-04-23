@@ -143,17 +143,6 @@ public class Complex {
 		return pow(0.5);
 	}
 
-	public Complex pow(int pow) {
-		if(pow > 0 && pow < 5) {
-			Complex value = this;
-			for(int i = 0; i < pow-1; i++) {
-				value = value.multiply(value);
-			}
-			return value;
-		}
-		return pow(pow);
-	}
-
 	public boolean equals(Complex other) {
 		return (re == other.re) && (im == other.im);
 	}
