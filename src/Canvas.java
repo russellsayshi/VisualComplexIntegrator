@@ -176,7 +176,7 @@ public class Canvas extends JPanel {
 		// Fill in squares 
 		for(int y = 0; y < height; y++) {
 			for(int x = 0; x < width; x++) {
-				Complex point = new Complex(((double)x)/width*(maxX-minX)+minX, ((double)y)/height*(maxY-minY)+minY);
+				Complex point = new Complex(((double)x)/width*(maxX-minX)+minX, (height-(double)y)/height*(maxY-minY)+minY);
 				Complex value = Operation.perform(point);
 				double arg = value.arg()/(2*Math.PI)+0.5;
 				if(arg < 0 || arg > 1) System.out.println(arg);
